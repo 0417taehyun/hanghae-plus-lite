@@ -9,6 +9,6 @@ on:
 
 jobs:  
   build-and-test:
-    uses: ./.github/workflows/build-job.yml
+    uses: ./.github/workflows/build-job.yaml
     with:
       target_directory: w01/hhplus-tdd-jvm
