@@ -4,6 +4,7 @@ on:
   workflow_call:
     inputs:
       target_directory:
+        description: The directory of the project to build and test
         required: true
         type: string
 
