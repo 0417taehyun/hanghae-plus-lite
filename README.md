@@ -20,7 +20,7 @@
 
 ### 관련 링크
 
-- [프로젝트 레포지토리](./w01/README.md)
+- [프로젝트 레포지토리](./w01)
 - [마일스톤(Milestone)](https://github.com/0417taehyun/hanghae-plus-lite/milestone/1)
 - [WIL(Weekly I Learned)]()
 
