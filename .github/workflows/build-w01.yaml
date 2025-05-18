@@ -1,0 +1,14 @@
+name: Build and test of the first week
+
+on:
+  pull_request:
+    paths: [
+      'w01/hhplus-tdd-jvm/**',
+      '!w01/hhplus-tdd-jvm/README.md',
+    ]
+
+jobs:  
+  build-and-test:
+    uses: ./.github/workflows/build-job.yml
+    with:
+      target_directory: w01/hhplus-tdd-jvm
