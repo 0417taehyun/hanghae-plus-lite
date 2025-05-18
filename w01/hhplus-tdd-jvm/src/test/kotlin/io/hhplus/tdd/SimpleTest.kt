@@ -14,6 +14,6 @@ class SimpleTest {
         val result = one + two
 
         // then
-        assertThat(result).isEqualTo(10)
+        assertThat(result).isEqualTo(2)
     }
 }
