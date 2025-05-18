@@ -51,6 +51,5 @@ tasks.getByName("jar") {
 }
 // test tasks
 tasks.test {
-    ignoreFailures = true
     useJUnitPlatform()
 }
