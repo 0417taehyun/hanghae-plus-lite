@@ -25,6 +25,18 @@ class PointService(
         return updatedUserPoint
     }
 
+    fun use(userId: Long, amount: Long): UserPoint {
+        /*** Flow
+         * 1. Get existing UserPoint
+         * 2. Balance the total point by using the request amount
+         *  2-1. If the result is under zero, throw Exception
+         * 3. Update the UserPoint
+         * 4. Insert PointHistory with USE transaction.
+         * 5. Return updated UserPoint
+         */
+        TODO("Will be implemented in another commit.")
+    }
+
     companion object {
         private const val MAXIMUM_POINT = 100_000L
     }
