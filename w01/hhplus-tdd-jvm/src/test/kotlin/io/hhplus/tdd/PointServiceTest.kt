@@ -177,7 +177,7 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Given existing user point, When passing matched user id, Then returning the matched user point successfully.")
     fun givenExistingUserPoint_whenPassingMatchedUserId_ThenReturnUserPointSuccessfully() {
         // Given
         val userId = 1L
