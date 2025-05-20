@@ -40,10 +40,7 @@ class PointService(
     }
 
     fun get(userId: Long): UserPoint {
-        /*** Flow
-         * - Get UserPoint by using usrId
-         */
-        TODO("Will be implemented in another commit")
+        return userPointTable.selectById(id = userId)
     }
 
     companion object {
