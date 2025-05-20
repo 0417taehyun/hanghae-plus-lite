@@ -206,7 +206,7 @@ class PointServiceTest {
         // Given
         val userId = 1L
         val amount = 10_000L
-        val fakeUpdateMilliseconds = 1000L
+        val fakeUpdateMilliseconds = 1_000L
 
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
