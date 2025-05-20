@@ -26,15 +26,17 @@ class PointService(
     }
 
     fun use(userId: Long, amount: Long): UserPoint {
-        /*** Flow
-         * 1. Get existing UserPoint
-         * 2. Balance the total point by using the request amount
-         *  2-1. If the result is under zero, throw Exception
-         * 3. Update the UserPoint
-         * 4. Insert PointHistory with USE transaction.
-         * 5. Return updated UserPoint
-         */
-        TODO("Will be implemented in another commit.")
+        val existingUserPoint = userPointTable.selectById(id = userId)
+        val balancedAmount = existingUserPoint.point - amount
+
+        if (balancedAmount < 0) {
+            throw PointException.IllegalAmountUseException("Amount must be less than existing point.")
+        }
+
+        val updatedUserPoint = userPointTable.insertOrUpdate(id = userId, amount = balancedAmount)
+        pointHistoryTable.insert(id = userId, amount = amount, transactionType = TransactionType.USE, updateMillis = timeUtil.getCurrentTimeInMilliSeconds())
+
+        return updatedUserPoint
     }
 
     companion object {
