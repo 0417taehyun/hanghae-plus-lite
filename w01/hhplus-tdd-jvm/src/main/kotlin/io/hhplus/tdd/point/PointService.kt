@@ -43,6 +43,13 @@ class PointService(
         return userPointTable.selectById(id = userId)
     }
 
+    fun getHistories(userId: Long): List<PointHistory> {
+        /*** Flow
+         * 1. Get a list of PointHistory by using userId
+         */
+        TODO("Will be implemented in another commit.")
+    }
+
     companion object {
         private const val MAXIMUM_POINT = 100_000L
     }
