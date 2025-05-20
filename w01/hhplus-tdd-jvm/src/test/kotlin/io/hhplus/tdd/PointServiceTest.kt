@@ -146,4 +146,33 @@ class PointServiceTest {
                 updateMillis = fakeUpdateMilliseconds
             )
     }
+
+    @Test
+    @DisplayName("Given 10,000 existing points, When using 10,001 points, Then throw IllegalAmountUseException.")
+    fun givenExistingPoints_whenUsingPointsOverExisting_ThenThrowException() {
+        // Given
+        val userId = 1L
+        val existingPoint = 10_000L
+        val amount = 10_001L
+        val fakeUpdateMilliseconds = 1000L
+
+        val userPointTable = mock(UserPointTable::class.java)
+        val pointHistoryTableMock = mock(PointHistoryTable::class.java)
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+
+        `when`(userPointTable.selectById(id = userId))
+            .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
+
+        // When
+        // Then
+        assertThrows<PointException.IllegalAmountUseException> {
+            pointService.use(userId = userId, amount = amount)
+        }
+
+        verify(userPointTable, times(1)).selectById(id = userId)
+        verify(userPointTable, never()).insertOrUpdate(id = userId, amount = existingPoint - amount)
+        verify(pointHistoryTableMock, never()).insert(id = userId, amount = amount, transactionType = TransactionType.USE, updateMillis = fakeUpdateMilliseconds)
+    }
 }
