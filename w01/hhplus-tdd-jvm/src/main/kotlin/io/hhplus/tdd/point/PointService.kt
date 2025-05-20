@@ -39,6 +39,13 @@ class PointService(
         return updatedUserPoint
     }
 
+    fun get(userId: Long): UserPoint {
+        /*** Flow
+         * - Get UserPoint by using usrId
+         */
+        TODO("Will be implemented in another commit")
+    }
+
     companion object {
         private const val MAXIMUM_POINT = 100_000L
     }
