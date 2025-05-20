@@ -69,9 +69,9 @@ class PointServiceTest {
     fun givenExistingPoints_whenChargingPointsOverMaximum_ThenThrowException() {
         // Given
         val userId = 1L
-        val existingPoint = 10000L
-        val amount = 90001L
-        val fakeUpdateMilliseconds = 1000L
+        val existingPoint = 10_000L
+        val amount = 90_001L
+        val fakeUpdateMilliseconds = 1_000L
 
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
