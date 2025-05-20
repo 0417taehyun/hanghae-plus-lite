@@ -12,13 +12,20 @@ class PointService(
     private val timeUtil: TimeUtil
 ) {
     fun charge(userId: Long, amount: Long): UserPoint {
-        /*** Flow
-         * 1. Get existent UserPoint
-         * 2. Add an amount from request
-         *   2-1. If the total amount is over the policy, throw exception.
-         *      - cf. We currently set the maximum point to 100,000.
-         * 3. Add a history
-         */
-        TODO("Will be implemented in another commit.")
+        val existingUserPoint = userPointTable.selectById(id = userId)
+        val totalAmount = existingUserPoint.point + amount
+
+        if (totalAmount > MAXIMUM_POINT) {
+            throw PointException.IllegalAmountChargeException("Total point must be less than $MAXIMUM_POINT.")
+        }
+
+        val updatedUserPoint = userPointTable.insertOrUpdate(id = userId, amount = totalAmount)
+        pointHistoryTable.insert(id = userId, amount = amount, transactionType = TransactionType.CHARGE, updateMillis = timeUtil.getCurrentTimeInMilliSeconds())
+
+        return updatedUserPoint
+    }
+
+    companion object {
+        private const val MAXIMUM_POINT = 100_000L
     }
 }
