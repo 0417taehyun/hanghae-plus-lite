@@ -44,10 +44,7 @@ class PointService(
     }
 
     fun getHistories(userId: Long): List<PointHistory> {
-        /*** Flow
-         * 1. Get a list of PointHistory by using userId
-         */
-        TODO("Will be implemented in another commit.")
+        return pointHistoryTable.selectAllByUserId(userId = userId)
     }
 
     companion object {
