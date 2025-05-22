@@ -39,6 +39,10 @@ class PointService(
         return updatedUserPoint
     }
 
+    fun get(userId: Long): UserPoint {
+        return userPointTable.selectById(id = userId)
+    }
+
     companion object {
         private const val MAXIMUM_POINT = 100_000L
     }
