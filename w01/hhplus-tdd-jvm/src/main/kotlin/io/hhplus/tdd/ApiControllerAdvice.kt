@@ -1,5 +1,6 @@
 package io.hhplus.tdd
 
+import io.hhplus.tdd.point.PointException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -34,6 +35,14 @@ class ApiControllerAdvice : ResponseEntityExceptionHandler() {
             }
 
         return ResponseEntity(mapOf("code" to "400", "message" to errorMessage), HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(PointException.IllegalAmountChargeException::class)
+    fun handleIllegalAmountChargeException(exception: PointException.IllegalAmountChargeException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity(
+            ErrorResponse("400", "최대 금액을 넘어서는 충전을 시도했습니다."),
+            HttpStatus.BAD_REQUEST
+        )
     }
 
     @ExceptionHandler(Exception::class)
