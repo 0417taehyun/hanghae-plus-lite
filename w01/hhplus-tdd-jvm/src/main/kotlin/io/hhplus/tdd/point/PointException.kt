@@ -1,5 +1,5 @@
 package io.hhplus.tdd.point
 
-sealed class PointException(message: String): Exception(message) {
+sealed class PointException(message: String): RuntimeException(message) {
     class IllegalAmountChargeException(message: String): PointException(message = message)
 }
