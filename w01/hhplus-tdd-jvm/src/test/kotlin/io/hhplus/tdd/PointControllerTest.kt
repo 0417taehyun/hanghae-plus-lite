@@ -2,6 +2,7 @@ package io.hhplus.tdd
 
 import io.hhplus.tdd.point.PointException
 import io.hhplus.tdd.point.PointService
+import io.hhplus.tdd.point.UserPoint
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -62,6 +63,54 @@ class PointControllerTest(
             MockMvcRequestBuilders.patch("/point/$userId/charge")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"amount\":$chargeAmount}")
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest)
+    }
+
+
+    @Test
+    @DisplayName("Given 100 amount, When trying to use point, Then returning OK with used points.")
+    fun givenValidAmount_whenUsing_ThenReturnUsedPoint() {
+        val userId = 1L
+        val useAmount = 100L
+        val fakeUpdateMilliseconds = 1_000L
+
+        `when`(pointServiceMock.use(userId = userId, amount = useAmount))
+            .thenReturn(UserPoint(id = userId, point = 0L, updateMillis = fakeUpdateMilliseconds))
+
+        mvcMock.perform(
+            MockMvcRequestBuilders.patch("/point/$userId/use")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":$useAmount}")
+        ).andExpect(MockMvcResultMatchers.status().isOk)
+    }
+
+
+    @Test
+    @DisplayName("Given 0 amount, When trying to use point, Then returning BadRequest.")
+    fun givenInvalidAmount_whenUsingWithAmountLessThanZero_ThenThrowException() {
+        val userId = 1L
+        val useAmount = 0L
+
+        mvcMock.perform(
+            MockMvcRequestBuilders.patch("/point/$userId/use")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":$useAmount}")
+        ).andExpect(MockMvcResultMatchers.status().isBadRequest)
+    }
+
+    @Test
+    @DisplayName("Given 100 amount, When trying to use over existing point, Then returning BadRequest.")
+    fun givenInvalidAmount_whenUsingWithAmountOverExistingPoint_ThenThrowException() {
+        val userId = 1L
+        val useAmount = 100L
+
+        `when`(pointServiceMock.use(userId = userId, amount = useAmount))
+            .thenThrow(PointException.IllegalAmountUseException("Amount must be less than existing point."))
+
+        mvcMock.perform(
+            MockMvcRequestBuilders.patch("/point/$userId/use")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":$useAmount}")
         ).andExpect(MockMvcResultMatchers.status().isBadRequest)
     }
 }
