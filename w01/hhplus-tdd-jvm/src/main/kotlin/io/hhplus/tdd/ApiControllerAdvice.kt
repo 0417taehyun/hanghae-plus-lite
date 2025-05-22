@@ -45,6 +45,14 @@ class ApiControllerAdvice : ResponseEntityExceptionHandler() {
         )
     }
 
+    @ExceptionHandler(PointException.IllegalAmountUseException::class)
+    fun handleIllegalAmountUseException(exception: PointException.IllegalAmountUseException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity(
+            ErrorResponse("400", "보유 중인 금액을 넘어서는 사용을 시도했습니다."),
+            HttpStatus.BAD_REQUEST
+        )
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ErrorResponse> {
         return ResponseEntity(
