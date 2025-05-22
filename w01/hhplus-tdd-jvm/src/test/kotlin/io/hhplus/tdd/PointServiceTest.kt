@@ -199,4 +199,30 @@ class PointServiceTest {
         // Then
         assertThat(result).isEqualTo(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
     }
+
+    @Test
+    @DisplayName("Given two transactions, When passing matched user id, Then returning a history of two transactions successfully.")
+    fun givenExistingPointHistory_whenPassingMatchedUserId_ThenReturningListOfPointHistorySuccessfully() {
+        // Given
+        val userId = 1L
+        val amount = 10_000L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = mock(UserPointTable::class.java)
+        val pointHistoryTableMock = mock(PointHistoryTable::class.java)
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+
+        val chargeTransaction = PointHistory(id = 1L, userId = userId, type = TransactionType.CHARGE, amount = amount, timeMillis = fakeUpdateMilliseconds)
+        val useTransaction = PointHistory(id = 2L, userId = userId, type = TransactionType.USE, amount = amount, timeMillis = fakeUpdateMilliseconds)
+
+        `when`(pointHistoryTableMock.selectAllByUserId(userId = userId)).thenReturn(listOf(chargeTransaction, useTransaction))
+
+        // When
+        val result = pointService.getHistories(userId = userId)
+
+        // Then
+        assertThat(result).isEqualTo(listOf(chargeTransaction, useTransaction))
+    }
 }
