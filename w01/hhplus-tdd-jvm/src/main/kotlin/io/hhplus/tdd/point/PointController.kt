@@ -35,19 +35,21 @@ class PointController(
         return pointService.charge(userId = id, amount = chargeRequest.amount)
     }
 
-    /**
-     * TODO - 특정 유저의 포인트를 사용하는 기능을 작성해주세요.
-     */
     @PatchMapping("{id}/use")
     fun use(
         @PathVariable id: Long,
-        @RequestBody amount: Long,
+        @RequestBody @Valid useRequest: UseRequest,
     ): UserPoint {
-        return UserPoint(0, 0, 0)
+        return pointService.use(userId = id, amount = useRequest.amount)
     }
 
     data class ChargeRequest(
         @field:Positive(message = "충전하려는 포인트는 0보다 커야 합니다.")
+        val amount: Long,
+    )
+
+    data class UseRequest(
+        @field:Positive(message = "사용하려는 포인트는 0보다 커야 합니다.")
         val amount: Long,
     )
 }
