@@ -27,8 +27,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -81,8 +87,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId)).
         thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -110,8 +122,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -164,8 +182,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -192,8 +216,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -216,8 +246,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         val chargeTransaction = PointHistory(id = 1L, userId = userId, type = TransactionType.CHARGE, amount = amount, timeMillis = fakeUpdateMilliseconds)
         val useTransaction = PointHistory(id = 2L, userId = userId, type = TransactionType.USE, amount = amount, timeMillis = fakeUpdateMilliseconds)
@@ -241,8 +277,14 @@ class PointServiceTest {
         val userPointTable = UserPointTable()
         val pointHistoryTable = PointHistoryTable()
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
 
         val readyLatch = CountDownLatch(2)
         val startLatch = CountDownLatch(1)
@@ -278,8 +320,14 @@ class PointServiceTest {
         val userPointTable = UserPointTable()
         val pointHistoryTable = PointHistoryTable()
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
 
         userPointTable.insertOrUpdate(id = userId, amount = amount)
 
@@ -316,8 +364,14 @@ class PointServiceTest {
         val userPointTable = UserPointTable()
         val pointHistoryTable = PointHistoryTable()
         val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
 
         val ready = CountDownLatch(2)
         val start = CountDownLatch(1)
@@ -367,8 +421,14 @@ class PointServiceTest {
         val userPointTable = UserPointTable()
         val pointHistoryTable = PointHistoryTable()
         val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
 
         val ready = CountDownLatch(2)
         val start = CountDownLatch(1)
@@ -408,8 +468,14 @@ class PointServiceTest {
         val userPointTable = UserPointTable()
         val pointHistoryTable = PointHistoryTable()
         val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
 
         val ready = CountDownLatch(2)
         val start = CountDownLatch(1)
