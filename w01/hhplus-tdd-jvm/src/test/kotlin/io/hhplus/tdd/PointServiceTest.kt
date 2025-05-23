@@ -1,5 +1,6 @@
 package io.hhplus.tdd
 
+import io.hhplus.tdd.common.UserIdReentrantLock
 import io.hhplus.tdd.database.PointHistoryTable
 import io.hhplus.tdd.database.UserPointTable
 import io.hhplus.tdd.point.*
@@ -8,6 +9,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class PointServiceTest {
     @Test
@@ -224,5 +229,214 @@ class PointServiceTest {
 
         // Then
         assertThat(result).isEqualTo(listOf(chargeTransaction, useTransaction))
+    }
+
+    @Test
+    @DisplayName("")
+    fun givenTwoChargeTransactions_whenExecutingConcurrently_ThenApplyingAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+
+        val readyLatch = CountDownLatch(2)
+        val startLatch = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+
+        // When
+        repeat(2) {
+            executor.submit {
+                readyLatch.countDown()
+                startLatch.await()
+                pointService.charge(userId = userId, amount = 50L)
+            }
+        }
+
+        readyLatch.await()
+        startLatch.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        // Then
+        assertThat(userPointTable.selectById(id = userId).point).isEqualTo(100L)
+    }
+
+    @Test
+    @DisplayName("")
+    fun givenTwoUseTransactions_whenExecutingConcurrently_ThenApplyingAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val amount = 100L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+
+        userPointTable.insertOrUpdate(id = userId, amount = amount)
+
+        val readyLatch = CountDownLatch(2)
+        val startLatch = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+
+        // When
+        repeat(2) {
+            executor.submit {
+                readyLatch.countDown()
+                startLatch.await()
+                pointService.use(userId = userId, amount = 50L)
+            }
+        }
+
+        readyLatch.await()
+        startLatch.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        // Then
+        assertThat(userPointTable.selectById(id = userId).point).isEqualTo(0L)
+    }
+
+    @Test
+    @DisplayName("")
+    fun givenBothChargeAndUseTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+
+        val ready = CountDownLatch(2)
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+        val exceptions = AtomicReference<Throwable?>(null)
+
+        // When
+        executor.submit {
+            ready.countDown()
+            start.await()
+            try {
+                pointService.charge(userId = userId, amount = 100L)
+            }
+            catch (throwable: Throwable) {
+                exceptions.compareAndSet(null, throwable)
+            }
+        }
+        executor.submit {
+            ready.countDown()
+            start.await()
+            try {
+                pointService.use(userId = userId, amount = 50L)
+            }
+            catch (throwable: Throwable) {
+                exceptions.compareAndSet(null, throwable)
+            }
+        }
+
+        ready.await()
+        start.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        // Then
+        assertThat(exceptions.get()).isNull()
+        assertThat(userPointTable.selectById(userId).point).isEqualTo(50L)
+    }
+
+    @Test
+    @DisplayName("")
+    fun givenBothChargeAndGetTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+
+        val ready = CountDownLatch(2)
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+
+        // When
+        executor.submit {
+            ready.countDown()
+            start.await()
+            pointService.charge(userId = userId, amount = 100L)
+        }
+        val getResult = executor.submit<UserPoint> {
+            ready.countDown()
+            start.await()
+            pointService.get(userId = userId)
+        }
+
+        ready.await()
+        start.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        val result = getResult.get()
+
+        // Then
+        assertThat(result.point).isEqualTo(100L)
+    }
+
+    @Test
+    @DisplayName("")
+    fun givenBothChargeAndHistoryTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTable, timeUtil = fakeTimeUtil)
+
+        val ready = CountDownLatch(2)
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+
+        // When
+        executor.submit {
+            ready.countDown()
+            start.await()
+            pointService.charge(userId = userId, amount = 100L)
+        }
+        val getHistoriesResult = executor.submit<List<PointHistory>> {
+            ready.countDown()
+            start.await()
+            pointService.getHistories(userId = userId)
+        }
+
+        ready.await()
+        start.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        val result = getHistoriesResult.get()[0]
+
+        // Then
+        assertThat(result.amount).isEqualTo(100L)
+        assertThat(result.type).isEqualTo(TransactionType.CHARGE)
     }
 }
