@@ -268,7 +268,7 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Given two charge transactions, When executing concurrently, Then applying all transactions successfully.")
     fun givenTwoChargeTransactions_whenExecutingConcurrently_ThenApplyingAllTransactionsSuccessfully() {
         // Given
         val userId = 1L
@@ -310,7 +310,7 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Given two use transactions, When executing concurrently, Then applying all transactions successfully.")
     fun givenTwoUseTransactions_whenExecutingConcurrently_ThenApplyingAllTransactionsSuccessfully() {
         // Given
         val userId = 1L
@@ -355,7 +355,7 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Given both charge and use transactions, When charge should be executed first, Then applying all transactions successfully.")
     fun givenBothChargeAndUseTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
         // Given
         val userId = 1L
@@ -412,7 +412,7 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Given both charge and get transactions, When charge should be executed first, Then applying all transactions successfully.")
     fun givenBothChargeAndGetTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
         // Given
         val userId = 1L
@@ -459,7 +459,7 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Given both charge and history transactions, When charge should be executed first, Then applying all transactions successfully.")
     fun givenBothChargeAndHistoryTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
         // Given
         val userId = 1L
