@@ -25,6 +25,20 @@ class PointService(
         return updatedUserPoint
     }
 
+    fun use(userId: Long, amount: Long): UserPoint {
+        val existingUserPoint = userPointTable.selectById(id = userId)
+        val balancedAmount = existingUserPoint.point - amount
+
+        if (balancedAmount < 0) {
+            throw PointException.IllegalAmountUseException("Amount must be less than existing point.")
+        }
+
+        val updatedUserPoint = userPointTable.insertOrUpdate(id = userId, amount = balancedAmount)
+        pointHistoryTable.insert(id = userId, amount = amount, transactionType = TransactionType.USE, updateMillis = timeUtil.getCurrentTimeInMilliSeconds())
+
+        return updatedUserPoint
+    }
+
     companion object {
         private const val MAXIMUM_POINT = 100_000L
     }
