@@ -1,5 +1,6 @@
 package io.hhplus.tdd
 
+import io.hhplus.tdd.common.UserIdReentrantLock
 import io.hhplus.tdd.database.PointHistoryTable
 import io.hhplus.tdd.database.UserPointTable
 import io.hhplus.tdd.point.*
@@ -8,6 +9,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class PointServiceTest {
     @Test
@@ -22,8 +27,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -76,8 +87,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId)).
         thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -105,8 +122,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -159,8 +182,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -187,8 +216,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         `when`(userPointTable.selectById(id = userId))
             .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
@@ -211,8 +246,14 @@ class PointServiceTest {
         val userPointTable = mock(UserPointTable::class.java)
         val pointHistoryTableMock = mock(PointHistoryTable::class.java)
         val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val fakeLockManager = FakeLockManager()
 
-        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTableMock,
+            timeUtil = fakeTimeUtil,
+            lockManager = fakeLockManager,
+        )
 
         val chargeTransaction = PointHistory(id = 1L, userId = userId, type = TransactionType.CHARGE, amount = amount, timeMillis = fakeUpdateMilliseconds)
         val useTransaction = PointHistory(id = 2L, userId = userId, type = TransactionType.USE, amount = amount, timeMillis = fakeUpdateMilliseconds)
@@ -224,5 +265,149 @@ class PointServiceTest {
 
         // Then
         assertThat(result).isEqualTo(listOf(chargeTransaction, useTransaction))
+    }
+
+    @Test
+    @DisplayName("Given two charge transactions, When executing concurrently, Then applying all transactions successfully.")
+    fun givenTwoChargeTransactions_whenExecutingConcurrently_ThenApplyingAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
+
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
+
+        val readyLatch = CountDownLatch(2)
+        val startLatch = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+
+        // When
+        repeat(2) {
+            executor.submit {
+                readyLatch.countDown()
+                startLatch.await()
+                pointService.charge(userId = userId, amount = 50L)
+            }
+        }
+
+        readyLatch.await()
+        startLatch.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        // Then
+        assertThat(userPointTable.selectById(id = userId).point).isEqualTo(100L)
+    }
+
+    @Test
+    @DisplayName("Given two use transactions, When executing concurrently, Then applying all transactions successfully.")
+    fun givenTwoUseTransactions_whenExecutingConcurrently_ThenApplyingAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val amount = 100L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
+
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
+
+        userPointTable.insertOrUpdate(id = userId, amount = amount)
+
+        val readyLatch = CountDownLatch(2)
+        val startLatch = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+
+        // When
+        repeat(2) {
+            executor.submit {
+                readyLatch.countDown()
+                startLatch.await()
+                pointService.use(userId = userId, amount = 50L)
+            }
+        }
+
+        readyLatch.await()
+        startLatch.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        // Then
+        assertThat(userPointTable.selectById(id = userId).point).isEqualTo(0L)
+    }
+
+    @Test
+    @DisplayName("Given both charge and use transactions, When charge should be executed first, Then applying all transactions successfully.")
+    fun givenBothChargeAndUseTransactions_whenChargeShouldBeExecutedFirst_ThenApplyAllTransactionsSuccessfully() {
+        // Given
+        val userId = 1L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = UserPointTable()
+        val pointHistoryTable = PointHistoryTable()
+        val fakeTimeUtil = FakeTimeUtil(fakeUpdateMilliseconds)
+        val lockManager = UserIdReentrantLock()
+
+        val pointService = PointService(
+            userPointTable = userPointTable,
+            pointHistoryTable = pointHistoryTable,
+            timeUtil = fakeTimeUtil,
+            lockManager = lockManager,
+        )
+
+        val ready = CountDownLatch(2)
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+        val exceptions = AtomicReference<Throwable?>(null)
+
+        // When
+        executor.submit {
+            ready.countDown()
+            start.await()
+            try {
+                pointService.charge(userId = userId, amount = 100L)
+            }
+            catch (throwable: Throwable) {
+                exceptions.compareAndSet(null, throwable)
+            }
+        }
+        executor.submit {
+            ready.countDown()
+            start.await()
+            try {
+                pointService.use(userId = userId, amount = 50L)
+            }
+            catch (throwable: Throwable) {
+                exceptions.compareAndSet(null, throwable)
+            }
+        }
+
+        ready.await()
+        start.countDown()
+
+        executor.shutdown()
+        executor.awaitTermination(1, TimeUnit.MINUTES)
+
+        // Then
+        assertThat(exceptions.get()).isNull()
+        assertThat(userPointTable.selectById(userId).point).isEqualTo(50L)
     }
 }
