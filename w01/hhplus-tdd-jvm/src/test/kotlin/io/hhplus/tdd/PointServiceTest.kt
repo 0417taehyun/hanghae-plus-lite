@@ -175,4 +175,28 @@ class PointServiceTest {
         verify(userPointTable, never()).insertOrUpdate(id = userId, amount = existingPoint - amount)
         verify(pointHistoryTableMock, never()).insert(id = userId, amount = amount, transactionType = TransactionType.USE, updateMillis = fakeUpdateMilliseconds)
     }
+
+    @Test
+    @DisplayName("Given existing user point, When passing matched user id, Then returning the matched user point successfully.")
+    fun givenExistingUserPoint_whenPassingMatchedUserId_ThenReturnUserPointSuccessfully() {
+        // Given
+        val userId = 1L
+        val existingPoint = 10_000L
+        val fakeUpdateMilliseconds = 1_000L
+
+        val userPointTable = mock(UserPointTable::class.java)
+        val pointHistoryTableMock = mock(PointHistoryTable::class.java)
+        val fakeTimeUtil = FakeTimeUtil(fixedTime = fakeUpdateMilliseconds)
+
+        val pointService = PointService(userPointTable = userPointTable, pointHistoryTable = pointHistoryTableMock, timeUtil = fakeTimeUtil)
+
+        `when`(userPointTable.selectById(id = userId))
+            .thenReturn(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
+
+        // When
+        val result = pointService.get(userId = userId)
+
+        // Then
+        assertThat(result).isEqualTo(UserPoint(id = userId, point = existingPoint, updateMillis = fakeUpdateMilliseconds))
+    }
 }
